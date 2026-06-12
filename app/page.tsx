@@ -408,7 +408,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Chart Distribusi Gejala Teks (Nyeri/Tidak) */}
-        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
+        {/* <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
           <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 mb-8">
             <Activity size={20} className="text-blue-500" /> Distribusi Gejala
           </h3>
@@ -427,7 +427,7 @@ export default function DashboardPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </div> */}
 
       </div>
 
