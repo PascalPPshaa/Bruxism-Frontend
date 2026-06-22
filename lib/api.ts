@@ -8,26 +8,10 @@ if (!baseURL) {
   throw new Error("NEXT_PUBLIC_API_URL is not defined at build time");
 }
 
-// const api = axios.create({
-//   baseURL,
-// });
-
-// api.interceptors.request.use((config) => {
-//   if (typeof window !== "undefined") {
-//     const token = localStorage.getItem("token");
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//   }
-//   return config;
-// });
-
-// ... kode import kamu
 
 const api = axios.create({
   baseURL,
   headers: {
-    // Header ini mencegah ngrok menampilkan halaman peringatan intersisial
     'ngrok-skip-browser-warning': 'true',
   }
 });
