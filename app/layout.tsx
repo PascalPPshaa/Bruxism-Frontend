@@ -7,7 +7,7 @@ import BottomNav from '../component/BottomNav';
 import './globals.css';
 import { Noto_Sans, Playfair_Display } from "next/font/google";
 import { cn } from "@/lib/utils";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/animate-ui/components/radix/sidebar';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 
 const playfairDisplayHeading = Playfair_Display({subsets:['latin'],variable:'--font-heading'});
 const notoSans = Noto_Sans({subsets:['latin'],variable:'--font-sans'});

@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { getQuestions, createQuestion, updateQuestion, deleteQuestion } from '@/lib/api';
 import { Question } from '@/types/database';
 import { Plus, Edit2, Trash2, X, Clock, MessageSquare } from 'lucide-react';
-import { Switch } from '@/components/animate-ui/components/radix/switch';
+import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { motion } from 'motion/react';
 
@@ -254,7 +254,6 @@ export default function QuestionsPage() {
                       checked={formData.isActive}
                       onCheckedChange={(checked) => setFormData({...formData, isActive: checked})}
                       className="data-[state=checked]:bg-sky-500 data-[state=unchecked]:bg-slate-300 dark:data-[state=unchecked]:bg-slate-600"
-                      thumbClassName="bg-white shadow-md data-[state=checked]:bg-white dark:data-[state=unchecked]:bg-slate-300"
                     />
                     <span className={`text-sm font-bold transition-colors duration-300 ${formData.isActive ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400 dark:text-slate-500'}`}>
                       {formData.isActive ? 'Aktif Sekarang' : 'Simpan Draft'}

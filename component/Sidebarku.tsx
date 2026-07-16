@@ -25,7 +25,7 @@ import {
   SidebarMenuButton,
   SidebarSeparator,
   useSidebar,
-} from '@/components/animate-ui/components/radix/sidebar'
+} from '@/components/ui/sidebar'
 import {
   DropdownMenu,
   DropdownMenuContent,
