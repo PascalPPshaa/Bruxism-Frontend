@@ -2,7 +2,7 @@ export interface Patient {
   telegram_id: string;
   name: string | null;
   birth: string | null;
-  isRegistered: number | null;
+  isRegistered: boolean | null;
   current_question_id: number | null;
   createdAt: string;
   updatedAt: string;
@@ -12,7 +12,7 @@ export interface Question {
   id: number; 
   question_text: string;
   scheduled_time: string; 
-  isActive: boolean; 
+  is_active: boolean; 
   createdAt: string;
   updatedAt: string;
 }

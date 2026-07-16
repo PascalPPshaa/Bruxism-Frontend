@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import { getPatientDetail } from '@/lib/api';
 import { Patient, SymptomLog } from '@/types/database';
 import { 
-  User, Calendar, ClipboardList, Loader2, ArrowLeft, BarChart3, MessageSquare
+  User, Calendar, ClipboardList, Loader2, ArrowLeft, MessageSquare
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -35,10 +35,10 @@ export default function PatientDetailPage() {
   };
 
   const getScaleColor = (answer: number) => {
-    if (answer >= 4) return 'text-red-600 bg-red-50';
-    if (answer >= 3) return 'text-orange-600 bg-orange-50';
-    if (answer >= 2) return 'text-yellow-600 bg-yellow-50';
-    return 'text-emerald-600 bg-emerald-50';
+    if (answer >= 4) return 'text-red-600 dark:text-red-400 bg-red-50/80 dark:bg-red-950/50';
+    if (answer >= 3) return 'text-orange-600 dark:text-orange-400 bg-orange-50/80 dark:bg-orange-950/50';
+    if (answer >= 2) return 'text-yellow-600 dark:text-yellow-400 bg-yellow-50/80 dark:bg-yellow-950/50';
+    return 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/50';
   };
 
   const formatDate = (dateStr: string) => {
@@ -54,8 +54,8 @@ export default function PatientDetailPage() {
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-      <p className="text-slate-500 font-medium animate-pulse">Memuat detail pasien...</p>
+      <Loader2 className="w-10 h-10 text-sky-500 animate-spin" />
+      <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">Memuat detail pasien...</p>
     </div>
   );
 
@@ -63,8 +63,8 @@ export default function PatientDetailPage() {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-4 text-center">
       <MessageSquare size={48} className="text-red-500" />
       <h2 className="text-xl font-bold text-red-700">Error</h2>
-      <p className="text-slate-600">{error}</p>
-      <Link href="/patients" className="mt-4 inline-flex items-center gap-2 text-blue-600 hover:underline">
+      <p className="text-slate-600 dark:text-slate-400">{error}</p>
+      <Link href="/patients" className="mt-4 inline-flex items-center gap-2 text-sky-500 hover:text-sky-400 hover:underline">
         <ArrowLeft size={16} /> Kembali ke Daftar Pasien
       </Link>
     </div>
@@ -73,9 +73,9 @@ export default function PatientDetailPage() {
   if (!patient) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-4 text-center">
       <MessageSquare size={48} className="text-slate-400" />
-      <h2 className="text-xl font-bold text-slate-700">Pasien Tidak Ditemukan</h2>
-      <p className="text-slate-600">Data pasien dengan Telegram ID {telegram_id} tidak ditemukan.</p>
-      <Link href="/patients" className="mt-4 inline-flex items-center gap-2 text-blue-600 hover:underline">
+      <h2 className="text-xl font-bold text-slate-700 dark:text-slate-300">Pasien Tidak Ditemukan</h2>
+      <p className="text-slate-600 dark:text-slate-400">Data pasien dengan Telegram ID {telegram_id} tidak ditemukan.</p>
+      <Link href="/patients" className="mt-4 inline-flex items-center gap-2 text-sky-500 hover:text-sky-400 hover:underline">
         <ArrowLeft size={16} /> Kembali ke Daftar Pasien
       </Link>
     </div>
@@ -85,24 +85,27 @@ export default function PatientDetailPage() {
     <div className="max-w-7xl mx-auto space-y-8 pb-10 px-4">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/patients" className="p-2 rounded-full hover:bg-slate-100 transition-colors">
-          <ArrowLeft size={24} className="text-slate-600" />
+        <Link href="/logs" className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+          <ArrowLeft size={24} className="text-slate-600 dark:text-slate-400" />
         </Link>
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Detail Pasien</h1>
-          <p className="text-slate-500 text-sm">Informasi lengkap dan riwayat gejala pasien.</p>
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Detail Pasien</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">Informasi lengkap dan riwayat gejala pasien.</p>
         </div>
       </div>
 
       {/* Patient Info */}
-      <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
-        <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-          <User size={24} className="text-blue-600" /> Informasi Pasien
+      <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-8 rounded-[2rem] shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-xl text-white shadow-lg shadow-sky-500/30">
+            <User size={20} />
+          </div>
+          Informasi Pasien
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4 text-slate-700">
-          <p><span className="font-semibold">Telegram ID:</span> <span className="font-mono bg-slate-100 px-2 py-1 rounded text-sm">{patient.telegram_id}</span></p>
-          <p><span className="font-semibold">Nama:</span> {patient.name || <span className="italic text-slate-400">Belum ada nama</span>}</p>
-          <p><span className="font-semibold">Tanggal Lahir:</span> {patient.birth || <span className="italic text-slate-400">Tidak ada</span>}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4 text-slate-700 dark:text-slate-300">
+          <p><span className="font-semibold">Telegram ID:</span> <span className="font-mono bg-slate-100/80 dark:bg-slate-800 px-2 py-1 rounded-lg text-sm">{patient.telegram_id}</span></p>
+          <p><span className="font-semibold">Nama:</span> {patient.name || <span className="italic text-slate-400 dark:text-slate-500">Belum ada nama</span>}</p>
+          <p><span className="font-semibold">Tanggal Lahir:</span> {patient.birth || <span className="italic text-slate-400 dark:text-slate-500">Tidak ada</span>}</p>
           <p><span className="font-semibold">Terdaftar:</span> {patient.isRegistered ? 'Ya' : 'Tidak'}</p>
           <p><span className="font-semibold">Dibuat:</span> {formatDate(patient.createdAt)}</p>
           <p><span className="font-semibold">Terakhir Update:</span> {formatDate(patient.updatedAt)}</p>
@@ -110,21 +113,24 @@ export default function PatientDetailPage() {
       </div>
 
       {/* Symptom Logs */}
-      <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
-        <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-          <ClipboardList size={24} className="text-emerald-600" /> Riwayat Log Gejala
+      <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-8 rounded-[2rem] shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl text-white shadow-lg shadow-emerald-500/30">
+            <ClipboardList size={20} />
+          </div>
+          Riwayat Log Gejala
         </h3>
         {symptomLogs.length === 0 ? (
-          <p className="text-slate-400 italic text-center py-4">Belum ada riwayat log gejala untuk pasien ini.</p>
+          <p className="text-slate-400 dark:text-slate-500 italic text-center py-4">Belum ada riwayat log gejala untuk pasien ini.</p>
         ) : (
           <div className="space-y-4">
             {symptomLogs.map((log) => (
-              <div key={log.id} className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-center justify-between gap-4">
+              <div key={log.id} className="bg-slate-50/80 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100/50 dark:border-slate-700/50 flex items-center justify-between gap-4">
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-700 mb-1">
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">
                     {log.question?.question_text || "Pertanyaan tidak diketahui"}
                   </p>
-                  <div className="flex items-center gap-3 text-xs text-slate-500">
+                  <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-1">
                       <Calendar size={12} />
                       {formatDate(log.createdAt)}
@@ -135,7 +141,7 @@ export default function PatientDetailPage() {
                   <div className={`px-4 py-2 rounded-xl font-black text-lg ${getScaleColor(log.answer)}`}>
                     {log.answer}
                   </div>
-                  <span className="text-xs text-slate-400">Skala</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500">Skala</span>
                 </div>
               </div>
             ))}
