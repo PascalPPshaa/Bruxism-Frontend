@@ -23,7 +23,6 @@ api.interceptors.request.use((config) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
-  // Tambahkan lagi di sini untuk memastikan semua request memilikinya
   config.headers['ngrok-skip-browser-warning'] = '69420'; 
   
   return config;
@@ -38,14 +37,14 @@ export const fetchRecentActivity = () => api.get('/admin/stats/recent');
 
 // --- DATA API (PROTECTED) ---
 export const getPatients = () => api.get('/patients');
-export const deletePatient = (phone: string) => api.delete(`/patients/${phone}`);
-export const getPatientDetail = (phone: string) => api.get<PatientDetailResponse>(`/patients/${phone}`);
+export const deletePatient = (telegram_id: string) => api.delete(`/patients/${telegram_id}`);
+export const getPatientDetail = (telegram_id: string) => api.get<PatientDetailResponse>(`/patients/${telegram_id}`);
 export const getQuestions = () => api.get('/question');
 export const createQuestion = (data: Partial<Question>) => api.post('/question', data);
 export const updateQuestion = (id: number, data: Partial<Question>) => api.put(`/question/${id}`, data);
 export const deleteQuestion = (id: number) => api.delete(`/question/${id}`);
 
-export const getLogs = () => api.get<SymptomLog[]>('/patients/logs'); 
+export const getLogs = () => api.get<{ data: SymptomLog[] }>('/patients/'); 
 export const getStatsCount = () => api.get('/admin/stats/count');
 export const getRecentLogs = () => api.get('/admin/stats/recent');
 

@@ -1,5 +1,5 @@
 export interface Patient {
-  phone: string;
+  telegram_id: string;
   name: string | null;
   birth: string | null;
   isRegistered: number | null;
@@ -12,19 +12,19 @@ export interface Question {
   id: number; 
   question_text: string;
   scheduled_time: string; 
-  is_active: number; 
+  isActive: boolean; 
   createdAt: string;
   updatedAt: string;
 }
 
 export interface SymptomLog {
   id: number; 
-  phone_number: string | null; 
+  telegram_id: string | null; 
   question_id: number | null; 
-  answer: string;
+  answer: number;
   createdAt: string;
   updatedAt: string;
-  phone_number_patient?: {
+  patient?: {
     name: string;
   };
   question?: {
