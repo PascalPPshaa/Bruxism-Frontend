@@ -21,7 +21,7 @@ interface SidebarProviderProps {
   defaultState?: "expanded" | "collapsed"
 }
 
-function SidebarProvider({ children, defaultState = "expanded" }: SidebarProviderProps) {
+function SidebarProvider({ children, defaultState = "collapsed" }: SidebarProviderProps) {
   const [state, setState] = React.useState(defaultState)
   return (
     <SidebarContext.Provider value={{ state, setState }}>
@@ -30,18 +30,19 @@ function SidebarProvider({ children, defaultState = "expanded" }: SidebarProvide
   )
 }
 
-const Sidebar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & { collapsible?: string; variant?: string }>(
-  ({ className, collapsible, variant, ...props }, ref) => {
+const Sidebar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & { variant?: string }>(
+  ({ className, variant, ...props }, ref) => {
     const { state } = useSidebar()
+    const width = state === "collapsed" ? "4rem" : "16rem"
     return (
       <div
         ref={ref}
         className={cn(
-          "flex h-full flex-col bg-slate-100 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-all duration-300",
-          state === "collapsed" ? "w-16" : "w-64",
-          variant === "floating" && "rounded-xl m-2 shadow-lg",
+          "fixed left-0 top-0 h-full flex flex-col bg-slate-100 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-[width] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-40",
+          variant === "floating" && "rounded-r-xl shadow-xl",
           className
         )}
+        style={{ width }}
         {...props}
       />
     )
@@ -100,9 +101,17 @@ const SidebarGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
 SidebarGroup.displayName = "SidebarGroup"
 
 const SidebarGroupLabel = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("px-2 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400", className)} {...props} />
-  )
+  ({ className, ...props }, ref) => {
+    const { state } = useSidebar()
+    return (
+      <div 
+        ref={ref} 
+        className={cn("px-2 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]", className)}
+        style={{ opacity: state === "collapsed" ? 0 : 1, height: state === "collapsed" ? "0" : "auto", overflow: "hidden" }}
+        {...props} 
+      />
+    )
+  }
 )
 SidebarGroupLabel.displayName = "SidebarGroupLabel"
 
@@ -122,15 +131,17 @@ SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const SidebarMenuButton = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement> & { isActive?: boolean; tooltip?: string; asChild?: boolean }>(
   ({ className, isActive, tooltip, asChild, children, ...props }, ref) => {
+    const { state } = useSidebar()
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
         ref={ref}
         className={cn(
-          "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+          "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
           isActive ? "bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-50" : "text-slate-600 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800",
           className
         )}
+        style={{ justifyContent: state === "collapsed" ? "center" : "flex-start" }}
         title={tooltip}
         {...props}
       >
@@ -142,9 +153,17 @@ const SidebarMenuButton = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAt
 SidebarMenuButton.displayName = "SidebarMenuButton"
 
 const SidebarSeparator = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("mx-2 h-px bg-slate-200 dark:bg-slate-800", className)} {...props} />
-  )
+  ({ className, ...props }, ref) => {
+    const { state } = useSidebar()
+    return (
+      <div 
+        ref={ref} 
+        className={cn("mx-2 bg-slate-200 dark:bg-slate-800 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]", className)} 
+        style={{ height: state === "collapsed" ? "0" : "1px", opacity: state === "collapsed" ? 0 : 1 }}
+        {...props} 
+      />
+    )
+  }
 )
 SidebarSeparator.displayName = "SidebarSeparator"
 
