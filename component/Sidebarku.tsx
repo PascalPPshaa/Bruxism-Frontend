@@ -11,6 +11,8 @@ import {
   Sun,
   Moon,
   ChevronRight,
+  Bot,
+  Timer,
 } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import {
@@ -41,6 +43,8 @@ const menu = [
   { name: 'Pasien', icon: Users, href: '/patients' },
   { name: 'Pertanyaan', icon: MessageSquare, href: '/questions' },
   { name: 'Log Gejala', icon: ClipboardList, href: '/logs' },
+  { name: 'Telegram Bot', icon: Bot, href: '/telegram' },
+  { name: 'Pengaturan Jadwal', icon: Timer, href: '/settings' },
 ]
 
 export default function SidebarComponent() {

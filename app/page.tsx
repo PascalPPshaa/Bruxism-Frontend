@@ -1,18 +1,18 @@
 "use client";
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getStatsCount, getRecentLogs, getPatients } from '../lib/api';
-import { Patient } from '../types/database';
-import { 
-  Bar, CartesianGrid, ComposedChart, Label, Line, ResponsiveContainer, Tooltip, XAxis, YAxis 
+import { getStatsCount, getRecentLogs, getPatients, getQueueStats, getIncomingQueueStats } from '../lib/api';
+import { Patient, SymptomLog, QueueStats, CallbackStats, HealthPayload } from '../types/database';
+import {
+  Bar, CartesianGrid, ComposedChart, Label, Line, ResponsiveContainer, Tooltip, XAxis, YAxis
 } from "recharts";
 import { ChartTooltipContent, selectEvenlySpacedItems } from "@/components/application/charts/charts-base";
-import { 
-  Users, Bot, ZapOff, AlertCircle, CheckCircle2, ArrowRight, LayoutDashboard, BarChart3
+import {
+  Users, Bot, ZapOff, AlertCircle, CheckCircle2, ArrowRight, LayoutDashboard, BarChart3,
+  Send, Inbox, Activity, RefreshCw
 } from 'lucide-react';
-import { SymptomLog } from '../types/database';
 import SplitText from '@/components/SplitText';
 import { motion } from 'motion/react';
 
@@ -24,6 +24,12 @@ export default function DashboardPage() {
 
   const [status, setStatus] = useState<string>('Menginisialisasi...');
   const [isReady, setIsReady] = useState<boolean>(false);
+
+  // --- Telegram Monitoring (v2.0-v3.0) ---
+  const [queueStats, setQueueStats] = useState<QueueStats | null>(null);
+  const [incomingStats, setIncomingStats] = useState<CallbackStats | null>(null);
+  const [healthPayload, setHealthPayload] = useState<HealthPayload | null>(null);
+  const [healthLoading, setHealthLoading] = useState(true);
 
   // Create patient name lookup map
   const patientNameMap = useMemo(() => {
@@ -44,7 +50,7 @@ export default function DashboardPage() {
           getRecentLogs(),
           getPatients()
         ]);
-        
+
         setStats({ totalPatients: countRes.data.total_patients || 0 });
         setRecentData(recentRes.data.data || []);
         setPatients(Array.isArray(patientsRes.data) ? patientsRes.data : patientsRes.data?.data || []);
@@ -54,16 +60,35 @@ export default function DashboardPage() {
         setLoading(false);
       }
     }
-    
+
     fetchData();
+
+    // --- Telegram queue stats polling (v2.0) ---
+    const fetchQueueStats = async () => {
+      try {
+        const [outRes, inRes] = await Promise.all([
+          getQueueStats(),
+          getIncomingQueueStats()
+        ]);
+        setQueueStats(outRes.data?.data || outRes.data || null);
+        setIncomingStats(inRes.data?.data || inRes.data || null);
+      } catch (err) {
+        console.error("Gagal memuat queue stats:", err);
+      } finally {
+        setHealthLoading(false);
+      }
+    };
+
+    fetchQueueStats();
+    const queueInterval = setInterval(fetchQueueStats, 5000); // Poll every 5s
 
     const rawUrl = process.env.NEXT_PUBLIC_API_URL;
     if (!rawUrl) {
       console.error('NEXT_PUBLIC_API_URL is not defined');
       return;
     }
-    const socketUrl = new URL(rawUrl).origin; 
-    
+    const socketUrl = new URL(rawUrl).origin;
+
     const socket: Socket = io(socketUrl, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
@@ -71,15 +96,27 @@ export default function DashboardPage() {
 
     socket.on('connect', () => {
       setStatus('Terhubung ke Server...');
+      socket.emit('subscribe_health');
     });
 
     socket.on('NEW_SYMPTOM_DATA', (data: SymptomLog) => {
       setRecentData(prev => [data, ...prev].slice(0, 50));
     });
 
+    socket.on('bot_health_update', (data: HealthPayload) => {
+      setHealthPayload(data);
+      setHealthLoading(false);
+    });
+
+    socket.on('bot_health_error', (error: { error: string }) => {
+      console.error('Health check error:', error.error);
+      setStatus('Error health monitoring');
+    });
+
     socket.on('disconnect', () => {
       setStatus('Koneksi Terputus.');
       setIsReady(false);
+      socket.emit('unsubscribe_health');
     });
 
     socket.on('connect', () => {
@@ -88,6 +125,8 @@ export default function DashboardPage() {
     });
 
     return () => {
+      clearInterval(queueInterval);
+      socket.emit('unsubscribe_health');
       socket.disconnect();
     };
   }, []);
@@ -199,6 +238,88 @@ export default function DashboardPage() {
         <StatCard title="Total Pasien" value={stats.totalPatients} icon={<Users size={24} />} color="bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400" />
         <StatCard title="Gejala Tinggi (Skala 3-5)" value={summaryStats.nyeri} icon={<AlertCircle size={24} />} color="bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400" />
         <StatCard title="Gejala Rendah (Skala 1-2)" value={summaryStats.normal} icon={<CheckCircle2 size={24} />} color="bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400" />
+      </motion.div>
+
+      {/* --- TELEGRAM MONITORING --- */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
+        {/* Queue Stats Card */}
+        <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 dark:text-slate-100">
+              <Send size={20} className="text-sky-500" /> Antrian Keluar
+            </h3>
+          </div>
+          {healthLoading && !queueStats ? (
+            <p className="text-slate-400 dark:text-slate-500 text-sm animate-pulse">Memuat statistik...</p>
+          ) : queueStats ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-50/80 dark:bg-slate-800/50 p-3 rounded-xl">
+                  <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Dalam Antrian</p>
+                  <p className="text-2xl font-black text-slate-800 dark:text-white mt-1">{queueStats.currentQueueSize}</p>
+                </div>
+                <div className="bg-slate-50/80 dark:bg-slate-800/50 p-3 rounded-xl">
+                  <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Terproses</p>
+                  <p className="text-2xl font-black text-sky-600 dark:text-sky-400 mt-1">{queueStats.processed}</p>
+                </div>
+              </div>
+              {queueStats.failed > 0 && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950 rounded-xl">
+                  <AlertCircle size={16} className="text-red-500 dark:text-red-400" />
+                  <span className="text-sm text-red-700 dark:text-red-300">Gagal: {queueStats.failed} pesan</span>
+                </div>
+              )}
+              {queueStats.rateLimiter.totalRateLimited > 0 && (
+                <p className="text-xs text-orange-600 dark:text-orange-400">Rate limited: {queueStats.rateLimiter.totalRateLimited}x</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-slate-400 dark:text-slate-500 text-sm">Gagal memuat statistik</p>
+          )}
+        </div>
+
+        {/* Incoming Queue + Health */}
+        <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 dark:text-slate-100">
+              <Inbox size={20} className="text-cyan-500" /> Status Bot & Antrian Masuk
+            </h3>
+          </div>
+          {healthLoading && !healthPayload ? (
+            <p className="text-slate-400 dark:text-slate-500 text-sm animate-pulse">Menunggu data live...</p>
+          ) : healthPayload ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-3 h-3 rounded-full animate-pulse ${healthPayload.health.available ? "bg-emerald-500" : "bg-red-500"}`}></div>
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                  {healthPayload.health.bot_info?.first_name || 'Bot'} - {healthPayload.health.diagnosis}
+                </span>
+              </div>
+              {incomingStats && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-50/80 dark:bg-slate-800/50 p-3 rounded-xl">
+                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Incoming Queue</p>
+                    <p className="text-2xl font-black text-slate-800 dark:text-white mt-1">{incomingStats.currentQueueSize}</p>
+                  </div>
+                  <div className="bg-slate-50/80 dark:bg-slate-800/50 p-3 rounded-xl">
+                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Avg. Processed</p>
+                    <p className="text-2xl font-black text-cyan-600 dark:text-cyan-400 mt-1">{Math.round(incomingStats.avgProcessingTime)}ms</p>
+                  </div>
+                </div>
+              )}
+              {healthPayload.queues.outgoing.currentQueueSize > 0 && (
+                <p className="text-xs text-orange-600 dark:text-orange-400">Outgoing queue: {healthPayload.queues.outgoing.currentQueueSize} pending</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-slate-400 dark:text-slate-500 text-sm">Health data belum tersedia</p>
+          )}
+        </div>
       </motion.div>
 
       {/* --- DIAGRAM / GRAFIK UTAMA --- */}
